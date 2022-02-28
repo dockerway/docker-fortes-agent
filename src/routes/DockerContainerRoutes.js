@@ -1,7 +1,12 @@
+const http = require("http");
+
 const express = require('express')
 const {containerStats} = require('../service/ContainerService')
 const router = express.Router()
 
+function validateStatusCode(statusCode){
+    return http.STATUS_CODES.hasOwnProperty(statusCode)
+}
 
 router.get('/docker/container/:contianerid/stats', async function (req, res) {
     try {
