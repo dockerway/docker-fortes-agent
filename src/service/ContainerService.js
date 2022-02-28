@@ -1,4 +1,3 @@
-require('dotenv').config();
 const Docker = require('dockerode');
 var docker = new Docker({socketPath: '/var/run/docker.sock'})
 
