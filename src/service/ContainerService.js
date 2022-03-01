@@ -32,7 +32,8 @@ function formatBytes(bytes, decimals = 2) {
             //CPU
             let cpuDelta = metric.cpu_stats.cpu_usage.total_usage -  metric.precpu_stats.cpu_usage.total_usage;
             let systemDelta = metric.cpu_stats.system_cpu_usage - metric.precpu_stats.system_cpu_usage;
-            let cpu= cpuDelta / systemDelta * metric.cpu_stats.cpu_usage.percpu_usage.length * 100;
+           // let cpu= cpuDelta / systemDelta * metric.cpu_stats.cpu_usage.percpu_usage.length * 100;
+            let cpu= cpuDelta / systemDelta * 100;
             stats.cpu = Math.round((cpu + Number.EPSILON) * 100) / 100
 
             //Memory
