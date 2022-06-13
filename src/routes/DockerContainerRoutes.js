@@ -22,11 +22,8 @@ router.get('/docker/container/:contianerid/stats', async function (req, res) {
 
 router.post('/docker/folders', async function (req, res){
     try {
-        console.log("CREATE FOLDER CONFIG DATA REQ!!",req)
-        console.log("CREATE FOLDER DATA!!",req.data)
-        console.log("CREATE FOLDER CONFIG DATA!!",req.config.data)
-        let r = await foldersCreator(req.data)
-        res.send("CREATE FOLDER!!")
+        let r = await foldersCreator(req.body)
+        res.send("Folder created successfully!")
         res.json(r)
     } catch(e){       
         let statusCode = (e.statusCode && validateStatusCode(e.statusCode)) ? e.statusCode : 500

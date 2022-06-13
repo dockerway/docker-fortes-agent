@@ -3,6 +3,7 @@ const express = require('express')
 const DockerContainerRoutes = require('./routes/DockerContainerRoutes')
 const ErrorHandlerMiddleware = require('./middlewares/ErrorHandlerMiddleware')
 const app = express()
+app.use(express.json())
 
 app.use('/api',DockerContainerRoutes)
 app.use(ErrorHandlerMiddleware)

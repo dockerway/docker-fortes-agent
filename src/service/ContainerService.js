@@ -49,9 +49,18 @@ const containerStats = function (containerId) {
 }
 
 const foldersCreator = function (volumes) {
-    for(let i = 0; i <= volumes.length; i++){
-        createDirIfDoesntExist(volumes[i]) //create the directory  
-    }
+    return new Promise(async (resolve, reject) => {
+        try {
+            let created
+            for(let i = 0; i <= volumes.paths.length; i++){
+                created += await createDirIfDoesntExist(volumes.paths[i]) //create the directory  
+            }
+            console.log("Created volumes: ",created)
+            resolve(created)
+        } catch (e) {
+            reject(e)
+        }
+    })
 }
 
 module.exports = {
