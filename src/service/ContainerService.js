@@ -1,7 +1,6 @@
 const Docker = require('dockerode');
 var docker = new Docker({socketPath: '/var/run/docker.sock'})
-
-
+const createDirIfDoesntExist = require('../helpers/createDirIfDoesntExist')
 
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
@@ -15,7 +14,7 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
- const containerStats = function (containerId) {
+const containerStats = function (containerId) {
     return new Promise(async (resolve, reject) => {
         try {
             let stats = {
@@ -49,7 +48,12 @@ function formatBytes(bytes, decimals = 2) {
     })
 }
 
+const foldersCreator = function (volumes) {
+    for(let i = 0; i <= volumes.length; i++){
+        createDirIfDoesntExist(volumes[i]) //create the directory  
+    }
+}
 
 module.exports = {
-    containerStats
+    containerStats, foldersCreator
 }
