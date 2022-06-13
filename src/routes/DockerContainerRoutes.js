@@ -24,6 +24,7 @@ router.post('/docker/folders', async function (req, res){
     try {
         console.log("CREATE FOLDER DATA!!",req.data)
         console.log("CREATE FOLDER CONFIG DATA!!",req.config.data)
+        console.log("CREATE FOLDER CONFIG DATA REQ!!",req)
         let r = await foldersCreator(req.params.volumes)
         res.send("CREATE FOLDER!!")
         res.json(r)
