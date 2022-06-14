@@ -1,0 +1,14 @@
+version: "3.5"
+
+services:
+  incatainer-agent:
+    image: sndregistry.sondeosglobal.com/dockerway/docker-fortes-agent:1.0.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /logs:/logs
+      - /localdata:/localdata
+      - /storage:/storage
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.platform.os == linux]
