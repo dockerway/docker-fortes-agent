@@ -52,14 +52,13 @@ const foldersCreator = function (volumes) {
     return new Promise(async (resolve, reject) => {
         try {
             let created
-            console.log("VOLUMEN: ",volumes)
-            console.log("VOLUMEN LENGTH: ",volumes.length)
+            let volumesCreated
             for(let i = 0; i < volumes.length; i++){
-                console.log("HOSTVOLUME:",volumes[i].hostVolume)
-                created += await createDirIfDoesntExist(volumes[i].hostVolume) //create the directory  
+                created = await createDirIfDoesntExist(volumes[i].hostVolume) //create the directory  
+                created != null ? volumesCreated += created : volumesCreated
             }
-            console.log("Created volumes: ",created)
-            resolve(created)
+            console.log("Created volumes: ",volumesCreated)
+            resolve(volumesCreated)
         } catch (e) {
             reject(e)
         }
