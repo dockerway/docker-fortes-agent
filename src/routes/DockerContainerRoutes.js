@@ -22,7 +22,6 @@ router.get('/docker/container/:contianerid/stats', async function (req, res) {
 router.post('/docker/folders', async function (req, res){
     try {
         let r = await foldersCreator(req.body)
-        console.log({response: r})
         res.status(200)
         res.json({response: r})
     } catch(e){       
