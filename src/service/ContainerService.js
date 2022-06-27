@@ -51,12 +51,13 @@ const containerStats = function (containerId) {
 const foldersCreator = function (volumes) {
     return new Promise(async (resolve, reject) => {
         try {
-            let created
-            for(let i = 0; i <= volumes.paths.length; i++){
-                created += await createDirIfDoesntExist(volumes.paths[i]) //create the directory  
+            let created = ""
+            let volumesCreated = []
+            for(let i = 0; i < volumes.length; i++){
+                created = await createDirIfDoesntExist(volumes[i].hostVolume) //create the directory  
+                created != null ? volumesCreated.push({ volume: volumes[i].hostVolume, created: created }) : volumesCreated
             }
-            console.log("Created volumes: ",created)
-            resolve(created)
+            resolve(volumesCreated)
         } catch (e) {
             reject(e)
         }
