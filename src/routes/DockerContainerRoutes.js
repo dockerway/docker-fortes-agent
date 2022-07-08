@@ -1,7 +1,7 @@
 const http = require("http");
 
 const express = require('express')
-const { containerStats , foldersCreator } = require('../service/ContainerService')
+const { containerStats , foldersCreator, runTerminalOnContainer } = require('../service/ContainerService')
 const router = express.Router()
 
 function validateStatusCode(statusCode){
@@ -16,6 +16,17 @@ router.get('/docker/container/:contianerid/stats', async function (req, res) {
         let statusCode = (e.statusCode && validateStatusCode(e.statusCode)) ? e.statusCode : 500
         res.status(statusCode)
         res.send(e.message)
+    }
+})
+
+router.post('/docker/container/:containerid/runterminal', async function (req, res) {
+    try {
+        const response = await runTerminalOnContainer(req.params.containerid);
+        res.send(response);
+    } catch (error) {
+        const statusCode = (error.statusCode && validateStatusCode(error.statusCode)) ? error.statusCode : 500;
+        res.status(statusCode);
+        res.send(error.message);
     }
 })
 

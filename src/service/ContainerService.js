@@ -1,6 +1,7 @@
 const Docker = require('dockerode');
-var docker = new Docker({socketPath: '/var/run/docker.sock'})
-const createDirIfDoesntExist = require('../helpers/createDirIfDoesntExist')
+const docker = new Docker({socketPath: '/var/run/docker.sock'});
+
+const createDirIfDoesntExist = require('../helpers/createDirIfDoesntExist');
 
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
@@ -14,41 +15,42 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-const containerStats = function (containerId) {
+function containerStats(containerId) {
     return new Promise(async (resolve, reject) => {
         try {
-            let stats = {
+            const container = await docker.getContainer(containerId);
+
+            const opts =  {stream: false};
+            const metric = await container.stats(opts);
+
+            const stats = {
                 cpu: '',
                 memoryLimit: '',
                 memoryUsage: ''
-            }
-            let container = await docker.getContainer(containerId)
-
-            let opts =  {stream: false};
-
-            let metric = await container.stats(opts)
+            };
 
             //CPU
             let cpuDelta = metric.cpu_stats.cpu_usage.total_usage -  metric.precpu_stats.cpu_usage.total_usage;
             let systemDelta = metric.cpu_stats.system_cpu_usage - metric.precpu_stats.system_cpu_usage;
-           // let cpu= cpuDelta / systemDelta * metric.cpu_stats.cpu_usage.percpu_usage.length * 100;
+            // let cpu= cpuDelta / systemDelta * metric.cpu_stats.cpu_usage.percpu_usage.length * 100;
             let cpu= cpuDelta / systemDelta * 100;
-            stats.cpu = Math.round((cpu + Number.EPSILON) * 100) / 100
+            stats.cpu = Math.round((cpu + Number.EPSILON) * 100) / 100;
+
 
             //Memory
-            stats.memoryLimit = formatBytes(metric.memory_stats.limit)
-            stats.memoryUsage = formatBytes(metric.memory_stats.usage)
+            stats.memoryLimit = formatBytes(metric.memory_stats.limit);
+            stats.memoryUsage = formatBytes(metric.memory_stats.usage);
 
-            console.log("stats ",stats)
-            resolve(stats)
+            console.log("stats ", stats);
+            resolve(stats);
         } catch (e) {
-            reject(e)
+            reject(e);
         }
 
     })
 }
 
-const foldersCreator = function (volumes) {
+function foldersCreator(volumes) {
     return new Promise(async (resolve, reject) => {
         try {
             let created = ""
@@ -64,6 +66,57 @@ const foldersCreator = function (volumes) {
     })
 }
 
+function runTerminalOnContainer(containerID, terminal = 'sh'){
+
+    return new Promise(async (resolve, reject) => {
+        try {
+            const { createWebSocketStream, WebSocketServer } = require('ws');
+            const webSocketServer = new WebSocketServer({ port: 3000 });
+
+            webSocketServer.on('connection', (ws) => {
+                const duplex = createWebSocketStream(ws, { encoding: 'utf8' });
+
+                const dockerInstance = new Docker();
+                const selectedContainer = dockerInstance.getContainer(containerID);
+
+                function handle(error){
+                    ws.send(error.toString());
+                    reject(error)
+                    console.error(error);
+                }
+
+                const executionParameters = {
+                    AttachStdin: true,
+                    AttachStdout: true,
+                    AttachStderr: true,
+
+                    Cmd: [`${terminal}`],
+                    interactive: true,
+                    tty: true
+                }
+                
+                selectedContainer.exec(executionParameters, (error, exec) => {
+                    if (error) handle(error);
+            
+                    exec.start({stdin: true, stdout: true, stderr: true },
+                        (error, stream) => {
+                            if (error) handle(error);
+
+                            ws.onmessage = ({data}) => stream.write(data.toString()); //write to container terminal
+                            stream.on('data', (chunk) => ws.send(chunk.toString())); //send to client
+                        }
+                    );
+                });
+
+                ws.on('close', () => duplex.destroy());
+                resolve('Terminal started');
+            });
+        }catch(error){
+            reject(error);
+        }
+    });
+}
+
 module.exports = {
-    containerStats, foldersCreator
+    containerStats, foldersCreator, runTerminalOnContainer
 }
