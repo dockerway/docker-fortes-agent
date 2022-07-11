@@ -43,8 +43,8 @@ function containerStats(containerId) {
 
             console.log("stats ", stats);
             resolve(stats);
-        } catch (e) {
-            reject(e);
+        } catch (error) {
+            reject(error);
         }
 
     })
@@ -53,15 +53,15 @@ function containerStats(containerId) {
 function foldersCreator(volumes) {
     return new Promise(async (resolve, reject) => {
         try {
-            let created = ""
-            let volumesCreated = []
+            let created = "";
+            let volumesCreated = [];
             for(let i = 0; i < volumes.length; i++){
-                created = await createDirIfDoesntExist(volumes[i].hostVolume) //create the directory  
-                created != null ? volumesCreated.push({ volume: volumes[i].hostVolume, created: created }) : volumesCreated
+                created = await createDirIfDoesntExist(volumes[i].hostVolume); //create the directory  
+                created != null ? volumesCreated.push({ volume: volumes[i].hostVolume, created: created }) : volumesCreated;
             }
-            resolve(volumesCreated)
-        } catch (e) {
-            reject(e)
+            resolve(volumesCreated);
+        } catch (error) {
+            reject(error);
         }
     })
 }
@@ -71,6 +71,8 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
     return new Promise(async (resolve, reject) => {
         try {
             const { createWebSocketStream, WebSocketServer } = require('ws');
+
+
             const webSocketServer = new WebSocketServer({ port: 3000 });
 
             webSocketServer.on('connection', (ws) => {
@@ -81,9 +83,9 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
 
                 function handle(error){
                     ws.send(error.toString());
-                    reject(error)
+                    reject(error);
                     console.error(error);
-                }
+                };
 
                 const executionParameters = {
                     AttachStdin: true,
@@ -93,7 +95,7 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
                     Cmd: [`${terminal}`],
                     interactive: true,
                     tty: true
-                }
+                };
                 
                 selectedContainer.exec(executionParameters, (error, exec) => {
                     if (error) handle(error);
@@ -102,15 +104,18 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
                         (error, stream) => {
                             if (error) handle(error);
 
-                            ws.onmessage = ({data}) => stream.write(data.toString()); //write to container terminal
+                            ws.onmessage = ({data}) => {
+                                console.log(data)
+                                stream.write(data.toString())
+                            }; //write to container terminal
                             stream.on('data', (chunk) => ws.send(chunk.toString())); //send to client
                         }
                     );
                 });
 
                 ws.on('close', () => duplex.destroy());
-                resolve('Terminal started');
             });
+            resolve('Terminal started');
         }catch(error){
             reject(error);
         }
@@ -119,4 +124,4 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
 
 module.exports = {
     containerStats, foldersCreator, runTerminalOnContainer
-}
+};
