@@ -71,12 +71,12 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
     return new Promise(async (resolve, reject) => {
         try {
             const { createWebSocketStream, WebSocketServer } = require('ws');
-
-
             const webSocketServer = new WebSocketServer({ port: 3000 });
 
             webSocketServer.on('connection', (ws) => {
                 const duplex = createWebSocketStream(ws, { encoding: 'utf8' });
+                ws.on('close', () => duplex.destroy());
+                ws.on('close', () => webSocketServer.close());
 
                 const dockerInstance = new Docker();
                 const selectedContainer = dockerInstance.getContainer(containerID);
@@ -104,17 +104,13 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
                         (error, stream) => {
                             if (error) handle(error);
 
-                            ws.onmessage = ({data}) => {
-                                console.log(data)
-                                stream.write(data.toString())
-                            }; //write to container terminal
+                            ws.onmessage = ({data}) => stream.write(data.toString()); //write to container terminal
                             stream.on('data', (chunk) => ws.send(chunk.toString())); //send to client
                         }
                     );
                 });
-
-                ws.on('close', () => duplex.destroy());
             });
+
             resolve('Terminal started');
         }catch(error){
             reject(error);
