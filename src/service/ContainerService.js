@@ -48,16 +48,21 @@ const containerStats = function (containerId) {
     })
 }
 
-const foldersCreator = function (volumes) {
+const foldersCreator = function (body) {
     return new Promise(async (resolve, reject) => {
         try {
             let created = ""
             let volumesCreated = []
-            for(let i = 0; i < volumes.length; i++){
-                let volume = volumes[i].hostVolume.include(".") ? volumes[i].hostVolume.replace(/\/[^/|]*$/,"") : volumes[i].hostVolume
-                created = await createDirIfDoesntExist(volume) //create the directory  
-                created != null ? volumesCreated.push({ volume: volume, created: created }) : volumesCreated
+
+            console.log("body agent: ",body)
+            let verifiedFolders = body.volumes.filter(elem => elem.includes(body.files))
+            console.log("verifiedFolders: ",verifiedFolders)
+
+            for(let i = 0; i < verifiedFolders.length; i++){
+                created = await createDirIfDoesntExist(verifiedFolders[i]) //create the directory  
+                created != null ? volumesCreated.push({ volume: verifiedFolders[i], created: created }) : volumesCreated
             }                
+            
             console.log("Volumes created: ",created)
             resolve(volumesCreated)
         } catch (e) {
