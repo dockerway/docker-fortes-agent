@@ -54,6 +54,7 @@ const foldersCreator = function (volumes) {
             let created = ""
             let volumesCreated = []
 
+            console.log("Volumes: ",volumes)
             for(let i = 0; i < volumes.length; i++){
                 created = await createDirIfDoesntExist(volumes[i]) //create the directory  
                 created != null ? volumesCreated.push({ volume: volumes[i], created: created }) : volumesCreated
