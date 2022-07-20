@@ -71,12 +71,16 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
     return new Promise(async (resolve, reject) => {
         try {
             const { createWebSocketStream, WebSocketServer } = require('ws');
-            const webSocketServer = new WebSocketServer({ port: 3000 });
+            const webSocketServer = new WebSocketServer({ port: 8080 });
 
             webSocketServer.on('connection', (ws) => {
+                console.log("Connection Made!");
                 const duplex = createWebSocketStream(ws, { encoding: 'utf8' });
-                ws.on('close', () => duplex.destroy());
-                ws.on('close', () => webSocketServer.close());
+                ws.on('close', () => {
+                    console.log('Closing connection!');
+                    duplex.destroy();
+                    webSocketServer.close();
+                });
 
                 const dockerInstance = new Docker();
                 const selectedContainer = dockerInstance.getContainer(containerID);
@@ -103,9 +107,16 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
                     exec.start({stdin: true, stdout: true, stderr: true },
                         (error, stream) => {
                             if (error) handle(error);
+                            
+                            ws.onmessage = ({data}) => {
+                                console.log(data.toString());
+                                stream.write(data.toString());
+                            }; //write to container terminal
 
-                            ws.onmessage = ({data}) => stream.write(data.toString()); //write to container terminal
-                            stream.on('data', (chunk) => ws.send(chunk.toString())); //send to client
+                            stream.on('data', (chunk) => {
+                                console.log(chunk.toString());
+                                ws.send(chunk.toString());
+                            }); //send to client
                         }
                     );
                 });
