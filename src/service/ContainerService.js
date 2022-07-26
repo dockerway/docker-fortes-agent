@@ -109,12 +109,10 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
                             if (error) handle(error);
                             
                             ws.onmessage = ({data}) => {
-                                console.log(data.toString());
                                 stream.write(data.toString());
                             }; //write to container terminal
 
                             stream.on('data', (chunk) => {
-                                console.log(chunk.toString());
                                 ws.send(chunk.toString());
                             }); //send to client
                         }
