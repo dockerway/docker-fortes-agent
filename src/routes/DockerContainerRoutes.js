@@ -31,8 +31,10 @@ router.get('/docker/container/:containerid/runterminal/:terminal', async functio
 });
 
 router.post('/docker/folders', async function (req, res){
-    try {
-        const response = await foldersCreator(req.body)
+    try {        
+        if(!Array.isArray(req.body)) throw new Error("Request body must be an Array!")
+        let r = await foldersCreator(req.body)
+
         res.status(200)
         res.json({response: response})
     } catch(error){       
