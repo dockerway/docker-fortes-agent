@@ -76,7 +76,7 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
     return new Promise(async (resolve, reject) => {
         try {
             const { createWebSocketStream, WebSocketServer } = require('ws');
-            const webSocketServer = new WebSocketServer({ port: 8080 });
+            const webSocketServer = new WebSocketServer({ port:  process.env.WSSPORT });
 
             webSocketServer.on('connection', (ws) => {
                 console.log("Connection Made!");
