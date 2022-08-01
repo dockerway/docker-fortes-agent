@@ -75,56 +75,11 @@ function runTerminalOnContainer(containerID, terminal = 'sh'){
 
     return new Promise(async (resolve, reject) => {
         try {
-            const { createWebSocketStream, WebSocketServer } = require('ws');
-            const webSocketServer = new WebSocketServer({ port:  process.env.WSSPORT ? process.env.WSSPORT : 9997});
-
-            webSocketServer.on('connection', (ws) => {
-                console.log("Connection Made!");
-                const duplex = createWebSocketStream(ws, { encoding: 'utf8' });
-                ws.on('close', () => {
-                    console.log('Closing connection!');
-                    duplex.destroy();
-                    webSocketServer.close();
-                });
-
-                const dockerInstance = new Docker();
-                const selectedContainer = dockerInstance.getContainer(containerID);
-
-                function handle(error){
-                    ws.send(error.toString());
-                    reject(error);
-                    console.error(error);
-                };
-
-                const executionParameters = {
-                    AttachStdin: true,
-                    AttachStdout: true,
-                    AttachStderr: true,
-
-                    Cmd: [`${terminal}`],
-                    interactive: true,
-                    tty: true
-                };
-                
-                selectedContainer.exec(executionParameters, (error, exec) => {
-                    if (error) handle(error);
+            const { WSS } = require('../index');
+            const { executeTerminalOnDockerTask } = require('./WebSocketsService');
             
-                    exec.start({stdin: true, stdout: true, stderr: true },
-                        (error, stream) => {
-                            if (error) handle(error);
-                            
-                            ws.onmessage = ({data}) => {
-                                stream.write(data.toString());
-                            }; //write to container terminal
-
-                            stream.on('data', (chunk) => {
-                                ws.send(chunk.toString());
-                            }); //send to client
-                        }
-                    );
-                });
-            });
-
+            executeTerminalOnDockerTask(containerID, terminal, WSS)
+            
             resolve('Terminal started');
         }catch(error){
             reject(error);
