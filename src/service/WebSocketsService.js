@@ -37,12 +37,24 @@ function executeTerminalOnDockerTask(containerID, terminal, webSocketServer){
                 (error, stream) => {
                     if (error) handle(error);
                     
-                    ws.onmessage = ({data}) => {
-                        stream.write(data.toString());
+                    ws.onmessage = (message) => {
+                        const data = JSON.parse(message.data);
+
+                        console.log(`message received: '${data.payload}'`);
+                        console.log(`message containerID received: '${data.containerId}'`);
+
+                        if(data.containerId == containerID){
+                            stream.write(data.payload);
+                        }
                     }; //write to container terminal
 
                     stream.on('data', (chunk) => {
-                        ws.send(chunk.toString());
+                        const terminalMessage = {
+                            containerId:containerID,
+                            payload: chunk.toString()
+                        };
+
+                        ws.send(JSON.stringify(terminalMessage));
                     }); //send to client
                 }
             );
