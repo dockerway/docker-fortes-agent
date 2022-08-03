@@ -1,6 +1,6 @@
-function startWebSocketServer(){
+function startWebSocketServer(server){
     const { WebSocketServer } = require('ws');
-    const webSocketServer = new WebSocketServer({ port:  process.env.WSSPORT ? process.env.WSSPORT : 9997});
+    const webSocketServer = new WebSocketServer({ server: server});
 
     return webSocketServer;
 }
@@ -9,7 +9,8 @@ function executeTerminalOnDockerTask(containerID, terminal, webSocketServer){
     const Docker = require('dockerode');
 
     webSocketServer.on('connection', (ws) => {
-        console.log("Connection Made!");
+        console.log("Connection Made!: ", containerID);
+        console.log("WebSocket: ", ws);
 
         const dockerInstance = new Docker();
         const selectedContainer = dockerInstance.getContainer(containerID);
@@ -40,8 +41,7 @@ function executeTerminalOnDockerTask(containerID, terminal, webSocketServer){
                     ws.onmessage = (message) => {
                         const data = JSON.parse(message.data);
 
-                        console.log(`message received: '${data.payload}'`);
-                        console.log(`message containerID received: '${data.containerId}'`);
+                        console.log(`RECEIVED From FRONT containerID received: '${data.containerId}' | PAYLOAD: '${data.payload}'`);
 
                         if(data.containerId == containerID){
                             stream.write(data.payload);
@@ -54,6 +54,7 @@ function executeTerminalOnDockerTask(containerID, terminal, webSocketServer){
                             payload: chunk.toString()
                         };
 
+                        console.log(`SENT to FRONT containerID: '${terminalMessage.containerId}'| PAYLOAD: '${terminalMessage.payload}'`);
                         ws.send(JSON.stringify(terminalMessage));
                     }); //send to client
                 }
