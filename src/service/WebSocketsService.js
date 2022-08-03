@@ -11,7 +11,7 @@ function executeTerminalOnDockerTask(containerID, terminal, webSocketServer){
     webSocketServer.on('connection', (ws) => {
         console.log("Connection Made!: ", containerID);
         console.log("WebSocket: ", ws);
-
+        ws.id = containerID
         const dockerInstance = new Docker();
         const selectedContainer = dockerInstance.getContainer(containerID);
 
@@ -30,14 +30,14 @@ function executeTerminalOnDockerTask(containerID, terminal, webSocketServer){
             interactive: true,
             tty: true
         };
-        
+
         selectedContainer.exec(executionParameters, (error, exec) => {
             if (error) handle(error);
 
             exec.start({stdin: true, stdout: true, stderr: true },
                 (error, stream) => {
                     if (error) handle(error);
-                    
+
                     ws.onmessage = (message) => {
                         const data = JSON.parse(message.data);
 
