@@ -66,69 +66,8 @@ function foldersCreator(volumes) {
     })
 }
 
-function runTerminalOnContainer(containerID, terminal = 'sh'){
 
-    return new Promise(async (resolve, reject) => {
-        try {
-            const { createWebSocketStream, WebSocketServer } = require('ws');
-            const webSocketServer = new WebSocketServer({ port: 8080 });
-
-            webSocketServer.on('connection', (ws) => {
-                console.log("Connection Made!");
-                const duplex = createWebSocketStream(ws, { encoding: 'utf8' });
-                ws.on('close', () => {
-                    console.log('Closing connection!');
-                    duplex.destroy();
-                    webSocketServer.close();
-                });
-
-                const dockerInstance = new Docker();
-                const selectedContainer = dockerInstance.getContainer(containerID);
-
-                function handle(error){
-                    ws.send(error.toString());
-                    reject(error);
-                    console.error(error);
-                };
-
-                const executionParameters = {
-                    AttachStdin: true,
-                    AttachStdout: true,
-                    AttachStderr: true,
-
-                    Cmd: [`${terminal}`],
-                    interactive: true,
-                    tty: true
-                };
-                
-                selectedContainer.exec(executionParameters, (error, exec) => {
-                    if (error) handle(error);
-            
-                    exec.start({stdin: true, stdout: true, stderr: true },
-                        (error, stream) => {
-                            if (error) handle(error);
-                            
-                            ws.onmessage = ({data}) => {
-                                console.log(data.toString());
-                                stream.write(data.toString());
-                            }; //write to container terminal
-
-                            stream.on('data', (chunk) => {
-                                console.log(chunk.toString());
-                                ws.send(chunk.toString());
-                            }); //send to client
-                        }
-                    );
-                });
-            });
-
-            resolve('Terminal started');
-        }catch(error){
-            reject(error);
-        }
-    });
-}
 
 module.exports = {
-    containerStats, foldersCreator, runTerminalOnContainer
+    containerStats, foldersCreator
 };
