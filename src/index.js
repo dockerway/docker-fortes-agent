@@ -1,14 +1,13 @@
 require('dotenv').config();
 const httpServer = require('./http-server.js')
-const wsServer = require('./websocket-server')
 const express = require('express');
-const initializeWebSocketServer = require('./service/DockerWsService')
+const startWebSocketServerWithDocker = require('./service/DockerWsService')
 const DockerContainerRoutes = require('./routes/DockerContainerRoutes');
 const ErrorHandlerMiddleware = require('./middlewares/ErrorHandlerMiddleware');
 
 const app = express();
 
-initializeWebSocketServer()
+startWebSocketServerWithDocker()
 
 app.use(express.json());
 app.use('/api', DockerContainerRoutes);

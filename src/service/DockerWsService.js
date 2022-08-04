@@ -2,36 +2,36 @@ const wsServer = require('../websocket-server')
 const Docker = require("dockerode");
 
 
-const initializeWebSocketServer = () => {
+const startWebSocketServerWithDocker = () => {
     wsServer.on('connection', (ws) => {
         console.log("OnConnection clients size:", wsServer.clients.size)
         ws.on('message', async (data) => {
             let json = JSON.parse(data.toString()) // {containerId: xx, payload: yy }
 
-            //INICIALIZO EL ID SI NO EXISTE
-            if (!ws.id) {
-                ws.id = json.containerId
-            }
-            //INICIALIZO EL DOCKER STREAM SI NO EXISTE
             if (!ws.dockerStream) {
+                ws.dockerStream = {}
+            }
+
+            //INICIALIZO EL DOCKER STREAM SI NO EXISTE, UNO POR CADA CONTENEDOR DIFERENTE
+            if (!ws.dockerStream[json.containerId]) {
                 //OBTENGO EL STREAM
-                ws.dockerStream = await syncContainerExec(json.containerId, 'bash')
+                ws.dockerStream[json.containerId] = await getStreamFromContainerExec(json.containerId, 'bash')
                 //Si no obtube el stream genero error y retorno
-                if(!ws.dockerStream){
+                if(!ws.dockerStream[json.containerId]){
                     console.error("DockerStream doesnt work")
                     return
                 }
                 //AL RECIBIR DATOS DEL CONTENEDOR LOS MANDO AL WS
-                ws.dockerStream.on('data', (chunk) => {
+                ws.dockerStream[json.containerId].on('data', (chunk) => {
                     const terminalMessage = {containerId: json.containerId, payload: chunk.toString()}
-                    console.log(`WS SEND CONTAINERID: '${terminalMessage.containerId}'| PAYLOAD: '${terminalMessage.payload}'`);
-                    ws.send(JSON.stringify(terminalMessage));
+                    console.log('WS SEND',terminalMessage)
+                    ws.send(JSON.stringify(terminalMessage))
                 })
             }
             //ESCRIBO LOS DATOS RECIBIDOS POR EL WS EN EL DOCKER STREAM
-            if(ws.dockerStream){
-                console.log(`DockerStream WRITE CONTAINERID: '${terminalMessage.containerId}'| PAYLOAD: '${terminalMessage.payload}'`);
-                ws.dockerStream.write(json.payload);
+            if(ws.dockerStream[json.containerId]){
+                console.log('DockerStream write',json.payload);
+                ws.dockerStream[json.containerId].write(json.payload);
             }
 
 
@@ -39,7 +39,7 @@ const initializeWebSocketServer = () => {
     })
 }
 
-const syncContainerExec = (containerID, terminal = 'bash') => {
+const getStreamFromContainerExec = (containerID, terminal = 'bash') => {
 
     return new Promise((resolve, reject) => {
         const dockerInstance = new Docker();
@@ -74,4 +74,4 @@ const syncContainerExec = (containerID, terminal = 'bash') => {
 
 }
 
-module.exports = initializeWebSocketServer
+module.exports = startWebSocketServerWithDocker
