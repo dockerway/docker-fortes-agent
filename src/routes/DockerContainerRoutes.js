@@ -19,25 +19,15 @@ router.get('/docker/container/:containerid/stats', async function (req, res) {
     }
 });
 
-router.get('/docker/container/:containerid/runterminal/:terminal', async function (req, res) {
-    try {
-        const response = runTerminalOnContainer(req.params.containerid, req.params.terminal);
-        res.send(response);
-    } catch (error) {
-        const statusCode = (error.statusCode && validateStatusCode(error.statusCode)) ? error.statusCode : 500;
-        res.status(statusCode);
-        res.send(error.message);
-    }
-});
 
 router.post('/docker/folders', async function (req, res){
-    try {        
+    try {
         if(!Array.isArray(req.body)) throw new Error("Request body must be an Array!")
         let r = await foldersCreator(req.body)
 
         res.status(200)
         res.json({response: response})
-    } catch(error){       
+    } catch(error){
         const statusCode = (error.statusCode && validateStatusCode(error.statusCode)) ? error.statusCode : 500
         res.status(statusCode)
         res.send(error.message)

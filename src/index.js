@@ -1,18 +1,21 @@
 require('dotenv').config();
+const httpServer = require('./http-server.js')
 const express = require('express');
+const startWebSocketServerWithDocker = require('./service/DockerWsService')
 const DockerContainerRoutes = require('./routes/DockerContainerRoutes');
 const ErrorHandlerMiddleware = require('./middlewares/ErrorHandlerMiddleware');
-const cors = require('cors');
+
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+startWebSocketServerWithDocker()
 
+app.use(express.json());
 app.use('/api', DockerContainerRoutes);
 app.use(ErrorHandlerMiddleware);
 
 const PORT = process.env.PORT || 80;
-
-app.listen(PORT, () => {
-    console.log("Started app on port: " + PORT);
+httpServer.on('request', app);
+httpServer.listen(PORT, () =>{
+    console.log(`http/ws server listening on ${process.env.PORT}`);
 });
+
