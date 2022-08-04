@@ -59,10 +59,10 @@ function foldersCreator(volumes) {
 
             console.log("Volumes: ",volumes)
             for(let i = 0; i < volumes.length; i++){
-                created = await createDirIfDoesntExist(volumes[i]) //create the directory  
+                created = await createDirIfDoesntExist(volumes[i]) //create the directory
                 created != null ? volumesCreated.push({ volume: volumes[i], created: created }) : volumesCreated
-            }                
-            
+            }
+
             console.log("Volumes created: ",created)
             resolve(volumesCreated)
         } catch (e) {
@@ -71,22 +71,8 @@ function foldersCreator(volumes) {
     })
 }
 
-function runTerminalOnContainer(containerID, terminal = 'sh'){
 
-    return new Promise(async (resolve, reject) => {
-        try {
-            const { WSS } = require('../index');
-            const { executeTerminalOnDockerTask } = require('./WebSocketsService');
-            
-            executeTerminalOnDockerTask(containerID, terminal, WSS)
-            
-            resolve('Terminal started');
-        }catch(error){
-            reject(error);
-        }
-    });
-}
 
 module.exports = {
-    containerStats, foldersCreator, runTerminalOnContainer
+    containerStats, foldersCreator
 };

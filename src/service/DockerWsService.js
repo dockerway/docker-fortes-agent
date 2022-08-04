@@ -24,13 +24,13 @@ const startWebSocketServerWithDocker = () => {
                 //AL RECIBIR DATOS DEL CONTENEDOR LOS MANDO AL WS
                 ws.dockerStream[json.wsId].on('data', (chunk) => {
                     const terminalMessage = {wsId: json.wsId, containerId: json.containerId, payload: chunk.toString()}
-                    console.log('WS SEND',terminalMessage)
+                    //console.log('WS SEND',terminalMessage)
                     ws.send(JSON.stringify(terminalMessage))
                 })
             }
             //ESCRIBO LOS DATOS RECIBIDOS POR EL WS EN EL DOCKER STREAM
             if(ws.dockerStream[json.wsId]){
-                console.log('DockerStream write',json.payload);
+                //console.log('DockerStream write',json.payload);
                 ws.dockerStream[json.wsId].write(json.payload);
             }
 
