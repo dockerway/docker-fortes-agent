@@ -15,7 +15,7 @@ const startWebSocketServerWithDocker = () => {
             //INICIALIZO EL DOCKER STREAM SI NO EXISTE, UNO POR CADA CONTENEDOR DIFERENTE
             if (!ws.dockerStream[json.wsId]) {
                 //OBTENGO EL STREAM
-                ws.dockerStream[json.wsId] = await getStreamFromContainerExec(json.containerId, 'bash')
+                ws.dockerStream[json.wsId] = await getStreamFromContainerExec(json.containerId, json.terminalSelected)
                 //Si no obtube el stream genero error y retorno
                 if(!ws.dockerStream[json.wsId]){
                     console.error("DockerStream doesnt work")

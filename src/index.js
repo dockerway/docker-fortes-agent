@@ -15,7 +15,7 @@ app.use(ErrorHandlerMiddleware);
 
 const PORT = process.env.PORT || 80;
 httpServer.on('request', app);
+
 httpServer.listen(PORT, () =>{
     console.log(`http/ws server listening on ${process.env.PORT}`);
 });
-
