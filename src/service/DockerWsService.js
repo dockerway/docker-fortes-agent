@@ -23,60 +23,54 @@ const startWebSocketServerWithDocker = () => {
                 }
                 //AL RECIBIR DATOS DEL CONTENEDOR LOS MANDO AL WS
                 ws.dockerStream[json.wsId].on('data', (chunk) => {
-                    console.log("CHUNK: ", chunk, chunk.toString())
 
                     function deleteDockerHeaders(chunk) {
 
-                        let headersIndex = chunk.indexOf('01000000', 0, 'hex')
-                        let initialHeadersHadBeenDeleted = false
-                        let chunkHasNoHeaders = false
-                        let trimmeredChunkArray = []
+                        function chunkIndexIsInsideDockerHeadersRange(chunkIndex){
+                            let result
 
-                        while (!chunkHasNoHeaders) { //chequear headers -> guardar todo lo precedente asi como lo procedente a ellos -> goto 1
-                            if (headersIndex == -1) {
-                                chunkHasNoHeaders = true
-                                break
+                            for (let dockerHeaderIndex = 0; dockerHeaderIndex < dockerHeaderIndexes.length; dockerHeaderIndex++) {
+                                result = (chunkIndex >= dockerHeaderIndexes[dockerHeaderIndex].start && chunkIndex <= dockerHeaderIndexes[dockerHeaderIndex].end)
+                                if(result === true) break
                             }
-                            
-                            console.log(`Inside While loop | headersindex: '${headersIndex}'`)
 
-                            if (initialHeadersHadBeenDeleted) { // se eliminaron los headers del inicio
-                                console.log('initialHeadersHadBeenDeleted')
-                                for (let index = 0; index < headersIndex; index++) {
-                                    trimmeredChunkArray.push(chunk[index])
-                                    console.log(trimmeredChunkArray)
-                                }
+                            return result
+                        }
 
-                                chunk = chunk.subarray(headersIndex + 8)
-                                headersIndex = chunk.indexOf('01000000', 0, 'hex')
+                        const dockerHeaderIndexes = []
+                        const trimmeredChunkArray = []
+
+                        let chunkDockerHeaderSearchIndex = 0
+                        let dockerHeadersIndex = chunk.indexOf('01000000', chunkDockerHeaderSearchIndex, 'hex')
+
+                        let allDockerHeadersFromChunkWereDetected = false
+
+                        while (allDockerHeadersFromChunkWereDetected == false) {
+                            if (dockerHeadersIndex === -1) {
+                                allDockerHeadersFromChunkWereDetected = true
+
                             } else {
-                                console.log('else')
-                                chunk = chunk.subarray(headersIndex + 8)
-                                initialHeadersHadBeenDeleted = true
+                                dockerHeaderIndexes.push({ start: dockerHeadersIndex, end: (dockerHeadersIndex + 7) })
+
+                                dockerHeadersIndex = chunk.indexOf('01000000', chunkDockerHeaderSearchIndex, 'hex')
+                                chunkDockerHeaderSearchIndex = (dockerHeadersIndex + 7)
                             }
-
                         }
 
-                        console.log(trimmeredChunkArray)
-                        const trimmeredChunk = Buffer.from(trimmeredChunkArray)
-                        console.log(trimmeredChunk)
-
-                        return trimmeredChunk
-                    }
-
-                    function showBuffer(chunk) {
                         for (let index = 0; index < chunk.length; index++) {
-                            console.log(chunk[index])
+                            if(chunkIndexIsInsideDockerHeadersRange(index)){
+                                continue
+                            }else{
+                                trimmeredChunkArray.push(chunk[index])
+                            }
                         }
-                    }
 
-                    showBuffer(chunk)
+                        return Buffer.from(trimmeredChunkArray)
+                    }
 
                     chunk = deleteDockerHeaders(chunk)
-                    console.log("CHUNK with no headers: ", chunk, chunk.toString())
 
                     const terminalMessage = { wsId: json.wsId, containerId: json.containerId, payload: chunk.toString() }
-                    // console.log('WS SEND',terminalMessage)
                     ws.send(JSON.stringify(terminalMessage))
                 })
             }
