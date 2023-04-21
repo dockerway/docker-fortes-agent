@@ -1,12 +1,15 @@
-const fs = require('fs');
+import fs from 'fs';
 
-const createDirIfDoesntExist = function(dst){
-    if (!fs.existsSync(dst)){
-        fs.mkdirSync(dst,{recursive:true});
-        return true
+export function createDirIfItDoesntExist(path){
+    try {
+        if (!fs.existsSync(path)){
+            fs.mkdirSync(path, {recursive:true})
+            return true
+        }
+
+        return false
+    } catch (error) {
+        console.log(`An error happened when we tried to execute the createDirIfItDoesntExist function: '${error}'`)
+        throw(error)
     }
-    return false
 }
-
-module.exports.createDirIfDoesntExist = createDirIfDoesntExist
-module.exports =  createDirIfDoesntExist

@@ -1,5 +1,5 @@
-const wsServer = require('../websocket-server')
-const Docker = require("dockerode");
+import {wsServer} from '../websocket-server';
+import Docker from 'dockerode';
 
 
 const startWebSocketServerWithDocker = () => {
@@ -76,49 +76,40 @@ const startWebSocketServerWithDocker = () => {
             }
             //ESCRIBO LOS DATOS RECIBIDOS POR EL WS EN EL DOCKER STREAM
             if (ws.dockerStream[json.wsId]) {
-                console.log('DockerStream write', json.payload);
-                ws.dockerStream[json.wsId].write(json.payload);
+                console.log('DockerStream write', json.payload)
+                ws.dockerStream[json.wsId].write(json.payload)
             }
-
-
         })
     })
 }
 
-const getStreamFromContainerExec = (containerID, terminal = 'bash') => {
+const getStreamFromContainerExec = async (containerID, terminal = 'bash') => {
+    const dockerInstance = new Docker()
+    const selectedContainer = dockerInstance.getContainer(containerID)
 
-    return new Promise((resolve, reject) => {
-        const dockerInstance = new Docker();
-        const selectedContainer = dockerInstance.getContainer(containerID);
+    function handleError(error) {
+        console.error("HANDLE ERROR", error)
+        throw(error)
+    }
 
-        function handle(error) {
-            console.error("HANDLE ERROR", error);
-            reject(error)
-        }
+    const executionParameters = {
+        AttachStdin: true,
+        AttachStdout: true,
+        AttachStderr: true,
+        Cmd: [`${terminal}`],
+        interactive: true,
+        tty: true
+    }
 
-        const executionParameters = {
-            AttachStdin: true,
-            AttachStdout: true,
-            AttachStderr: true,
-            Cmd: [`${terminal}`],
-            interactive: true,
-            tty: true
-        };
+    selectedContainer.exec(executionParameters, (error, exec) => {
+        if (error) handleError(error)
 
-        selectedContainer.exec(executionParameters, (error, exec) => {
-            if (error) handle(error);
+        exec.start({ stdin: true, stdout: true, stderr: true }, (error, stream) => {
+            if (error) handleError(error)
 
-            exec.start({ stdin: true, stdout: true, stderr: true }, (error, stream) => {
-                if (error) handle(error)
-
-                resolve(stream)
-            })
-
+            return(stream)
         })
-
     })
-
-
 }
 
 module.exports = startWebSocketServerWithDocker
