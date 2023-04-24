@@ -1,10 +1,10 @@
-import {wsServer} from '../websocket-server';
+import { webSocketServer } from '../websocket-server.js';
 import Docker from 'dockerode';
 
 
-const startWebSocketServerWithDocker = () => {
-    wsServer.on('connection', (ws) => {
-        console.log("OnConnection clients size:", wsServer.clients.size)
+export const startWebSocketServerWithDocker = () => {
+    webSocketServer.on('connection', (ws) => {
+        console.log("OnConnection clients size:", webSocketServer.clients.size)
         ws.on('message', async (data) => {
             let json = JSON.parse(data.toString()) // {wsId: zz, containerId: xx, payload: yy }
 
@@ -111,5 +111,3 @@ const getStreamFromContainerExec = async (containerID, terminal = 'bash') => {
         })
     })
 }
-
-module.exports = startWebSocketServerWithDocker

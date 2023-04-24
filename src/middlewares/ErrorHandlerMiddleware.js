@@ -8,7 +8,3 @@ export function ErrorHandlerMiddleware(err, _req, res, _next) {
     res.status(status)
     res.send(err.message)
 }
-
-
-
-

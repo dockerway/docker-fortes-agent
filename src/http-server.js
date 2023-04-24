@@ -1,3 +1,3 @@
-const httpServer = require('http').createServer()
+import http from 'http';
 
-module.exports = httpServer
+export const httpServer = http.createServer()

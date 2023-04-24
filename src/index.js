@@ -1,7 +1,7 @@
-import ErrorHandlerMiddleware from './middlewares/ErrorHandlerMiddleware';
-import startWebSocketServerWithDocker from './service/DockerWsService';
-import DockerContainerRoutes from './routes/DockerContainerRoutes';
-import httpServer from './http-server.js';
+import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware.js';
+import { startWebSocketServerWithDocker } from './service/DockerWsService.js';
+import { router as DockerContainerRoutes } from './routes/DockerContainerRoutes.js';
+import { httpServer } from './http-server.js';
 import express from 'express';
 import dotenv from 'dotenv';
 

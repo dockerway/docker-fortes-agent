@@ -1,8 +1,8 @@
-const http = require("http");
+import http from 'http';
+import express from 'express';
 
-const express = require('express');
-const { containerStats , foldersCreator, runTerminalOnContainer } = require('../service/ContainerService');
-const router = express.Router();
+import { containerStats , foldersCreator } from '../service/ContainerService.js';
+export const router = express.Router();
 
 function validateStatusCode(statusCode){
     return http.STATUS_CODES.hasOwnProperty(statusCode)
@@ -32,5 +32,3 @@ router.post('/docker/folders', async function (req, res){
         res.send(error.message)
     }
 });
-
-module.exports = router;

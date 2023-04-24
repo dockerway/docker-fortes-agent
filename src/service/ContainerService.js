@@ -1,5 +1,5 @@
 import Docker from 'dockerode';
-import { createDirIfItDoesntExist } from '../helpers/createDirIfItDoesntExist';
+import { createDirIfItDoesntExist } from '../helpers/createDirIfItDoesntExist.js';
 
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
@@ -15,7 +15,7 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-async function containerStats(containerId) {
+export async function containerStats(containerId) {
     try {
         const container = await docker.getContainer(containerId)
         const metric = await container.stats({ stream: false })
@@ -46,7 +46,7 @@ async function containerStats(containerId) {
     }
 }
 
-async function foldersCreator(volumes) {
+export async function foldersCreator(volumes) {
     try {
         const volumesCreated = []
         let created = ""
@@ -63,8 +63,3 @@ async function foldersCreator(volumes) {
     }
 }
 
-
-
-module.exports = {
-    containerStats, foldersCreator
-}
