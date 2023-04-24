@@ -2,36 +2,73 @@ import { webSocketServer } from '../websocket-server.js';
 import Docker from 'dockerode';
 
 
+async function getStreamFromContainerExec(containerID, terminal = 'bash') {
+    try {
+        const dockerInstance = new Docker()
+        const selectedContainer = dockerInstance.getContainer(containerID)
+
+        console.log(`selectedContainer: ${JSON.stringify(selectedContainer)}`)
+
+        const executionParameters = {
+            AttachStdin: true,
+            AttachStdout: true,
+            AttachStderr: true,
+            Cmd: [`${terminal}`],
+            interactive: true,
+            tty: true
+        }
+
+        selectedContainer.exec(executionParameters, (error, exec) => {
+            if (error) throw error
+
+            exec.start({ stdin: true, stdout: true, stderr: true }, (error, stream) => {
+                if (error) throw error
+
+                console.log(`stream: ${JSON.stringify(stream)}`)
+
+                return stream
+            })
+        })
+    } catch (error) {
+        console.error(`An error happened at the getStreamFromContainerExec function: '${error}'`)
+        throw (error)
+    }
+}
+
 export const startWebSocketServerWithDocker = () => {
     webSocketServer.on('connection', (ws) => {
         console.log("OnConnection clients size:", webSocketServer.clients.size)
         ws.on('message', async (data) => {
-            let json = JSON.parse(data.toString()) // {wsId: zz, containerId: xx, payload: yy }
-
-            if (!ws.dockerStream) {
-                ws.dockerStream = {}
-            }
-
+            const json = JSON.parse(data.toString()) // {wsId: zz, containerId: xx, payload: yy }
+            console.log(`ws json data: '${JSON.stringify(json)}'`)
             //INICIALIZO EL DOCKER STREAM SI NO EXISTE, UNO POR CADA CONTENEDOR DIFERENTE
+            if (!ws.dockerStream) ws.dockerStream = {}
+
+
             if (!ws.dockerStream[json.wsId]) {
                 //OBTENGO EL STREAM
-                ws.dockerStream[json.wsId] = await getStreamFromContainerExec(json.containerId, json.terminalSelected)
-                //Si no obtuve el stream genero error y retorno
+                const containerStream = await getStreamFromContainerExec(json.containerId, json.terminalSelected)
+                ws.dockerStream[json.wsId] = containerStream
+
+
                 if (!ws.dockerStream[json.wsId]) {
-                    console.error("DockerStream doesnt work")
-                    return
+                    const error = `An error happenened when we tried to obtain the docker stream of the ${json.containerId}'s container | containerStream value: '${containerStream}'`
+
+                    console.error(error)
+                    throw new Error(error)
                 }
+
                 //AL RECIBIR DATOS DEL CONTENEDOR LOS MANDO AL WS
                 ws.dockerStream[json.wsId].on('data', (chunk) => {
 
                     function deleteDockerHeaders(chunk) {
 
-                        function chunkIndexIsInsideDockerHeadersRange(chunkIndex){
+                        function chunkIndexIsInsideDockerHeadersRange(chunkIndex) {
                             let result
 
                             for (let dockerHeaderIndex = 0; dockerHeaderIndex < dockerHeaderIndexes.length; dockerHeaderIndex++) {
                                 result = (chunkIndex >= dockerHeaderIndexes[dockerHeaderIndex].start && chunkIndex <= dockerHeaderIndexes[dockerHeaderIndex].end)
-                                if(result === true) break
+                                if (result === true) break
                             }
 
                             return result
@@ -58,9 +95,9 @@ export const startWebSocketServerWithDocker = () => {
                         }
 
                         for (let index = 0; index < chunk.length; index++) {
-                            if(chunkIndexIsInsideDockerHeadersRange(index)){
+                            if (chunkIndexIsInsideDockerHeadersRange(index)) {
                                 continue
-                            }else{
+                            } else {
                                 trimmeredChunkArray.push(chunk[index])
                             }
                         }
@@ -83,31 +120,4 @@ export const startWebSocketServerWithDocker = () => {
     })
 }
 
-const getStreamFromContainerExec = async (containerID, terminal = 'bash') => {
-    const dockerInstance = new Docker()
-    const selectedContainer = dockerInstance.getContainer(containerID)
 
-    function handleError(error) {
-        console.error("HANDLE ERROR", error)
-        throw(error)
-    }
-
-    const executionParameters = {
-        AttachStdin: true,
-        AttachStdout: true,
-        AttachStderr: true,
-        Cmd: [`${terminal}`],
-        interactive: true,
-        tty: true
-    }
-
-    selectedContainer.exec(executionParameters, (error, exec) => {
-        if (error) handleError(error)
-
-        exec.start({ stdin: true, stdout: true, stderr: true }, (error, stream) => {
-            if (error) handleError(error)
-
-            return(stream)
-        })
-    })
-}
