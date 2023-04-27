@@ -1,7 +1,8 @@
 const Docker = require('dockerode');
 const docker = new Docker({socketPath: '/var/run/docker.sock'});
 
-const createDirIfDoesntExist = require('../helpers/createDirIfDoesntExist')
+const createDirIfDoesntExist = require('../helpers/createDirIfDoesntExist');
+const { checkIfMountedDirectoriesExists, notMountedMessage } = require('../helpers/checkMountedVolumes');
 
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes'
@@ -48,18 +49,22 @@ function containerStats(containerId) {
 }
 
 function foldersCreator(volumes) {
-    try {
-        let created = false
-        const volumesCreated = []
+    if (checkIfMountedDirectoriesExists()){
+        try {
+            let created = false
+            const volumesCreated = []
 
-        for(let i = 0; i < volumes.length; i++){
-            created = createDirIfDoesntExist(volumes[i]) //create the directory  
-            created ? volumesCreated.push({ volume: volumes[i], created: created }) : volumesCreated
+            for(let i = 0; i < volumes.length; i++){
+                created = createDirIfDoesntExist(volumes[i]) //create the directory  
+                created ? volumesCreated.push({ volume: volumes[i], created: created }) : volumesCreated
+            }
+
+            return volumesCreated
+        } catch (error) {
+            throw error
         }
-
-        return volumesCreated
-    } catch (error) {
-        throw error
+    }else{
+        return notMountedMessage
     }
 }
 

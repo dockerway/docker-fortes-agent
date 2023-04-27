@@ -9,7 +9,7 @@ const createDirIfDoesntExist = function(directoryPath){
 
         return false
     } catch (error) {
-        console.error(`An error happened at createDirIfDoesntExist: '${createDirIfDoesntExist}'`)
+        console.error(`An error happened at createDirIfDoesntExist: '${error}'`)
         throw error
     }
 }
