@@ -1,9 +1,7 @@
 const http = require("http");
-
+const router = express.Router();
 const express = require('express');
 const { containerStats , foldersCreator } = require('../service/ContainerService');
-const { checkIfMountedDirectoriesExists } = require("../helpers/checkMountedVolumes");
-const router = express.Router();
 
 function validateStatusCode(statusCode){
     return http.STATUS_CODES.hasOwnProperty(statusCode)
