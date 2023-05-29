@@ -2,7 +2,9 @@ const fs = require('fs');
 
 function checkIfMountedDirectoriesExists() {
 
-    const directories = ['/localdata', '/storage', '/logs']
+    const neededVolumes = process.env.NEEDEDVOLUMES ? process.env.NEEDEDVOLUMES : '/localdata,/logs,/storage,/var'
+    const directories = neededVolumes.split(',').filter(element => element.startsWith('/'));
+
     let result = null
 
     try {
