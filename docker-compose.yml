@@ -2,12 +2,16 @@ version: "3.5"
 
 services:
   incatainer-agent:
-    image: sndregistry.sondeosglobal.com/dockerway/docker-fortes-agent:1.0.0
+    image: sndregistry.sondeosglobal.com/dockerway/docker-fortes-agent:1.6.2
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /localdata:/localdata
       - /storage:/storage
       - /logs:/logs
+    ports:
+      - "9997:9997"
+    environment: 
+      PORT: 9997
     deploy:
       mode: global
       placement:

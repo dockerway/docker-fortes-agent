@@ -8,6 +8,10 @@ services:
       - /localdata:/localdata
       - /storage:/storage
       - /logs:/logs
+    ports:
+      - "9997:9997"
+    environment: 
+      PORT: 9997
     deploy:
       mode: global
       placement:
